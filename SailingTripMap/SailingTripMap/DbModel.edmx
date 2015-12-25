@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl" Namespace="DbModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2005">
+        <EntityContainer Name="DbModelTargetContainer" >
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" xmlns:cg="http://schemas.microsoft.com/ado/2006/04/codegeneration" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" Namespace="DbModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" annotation:UseStrongSpatialTypes="false">
+        <EntityContainer Name="DbModelContainer" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Connections" EntityType="DbModel.Connection" />
+          <EntitySet Name="MapPointSet" EntityType="DbModel.MapPoint" />
+          <EntitySet Name="PictureSet" EntityType="DbModel.Picture" />
+          <AssociationSet Name="MapPointPicture" Association="DbModel.MapPointPicture">
+            <End Role="MapPoint" EntitySet="MapPointSet" />
+            <End Role="Picture" EntitySet="PictureSet" />
+          </AssociationSet>
+          <EntitySet Name="FileSet" EntityType="DbModel.File" />
+          <AssociationSet Name="MapPointFile" Association="DbModel.MapPointFile">
+            <End Role="MapPoint" EntitySet="MapPointSet" />
+            <End Role="File" EntitySet="FileSet" />
+          </AssociationSet>
+          <EntitySet Name="RatingSet" EntityType="DbModel.Rating" />
+          <AssociationSet Name="ConnectionRating" Association="DbModel.ConnectionRating">
+            <End Role="Connection" EntitySet="Connections" />
+            <End Role="Rating" EntitySet="RatingSet" />
+          </AssociationSet>
+          <AssociationSet Name="HarbourRating" Association="DbModel.HarbourRating">
+            <End Role="Harbour" EntitySet="MapPointSet" />
+            <End Role="Rating" EntitySet="RatingSet" />
+          </AssociationSet>
+          <AssociationSet Name="PictureRating" Association="DbModel.PictureRating">
+            <End Role="Picture" EntitySet="PictureSet" />
+            <End Role="Rating" EntitySet="RatingSet" />
+          </AssociationSet>
+          </EntityContainer>
+        <EntityType Name="Waypoint" BaseType="DbModel.MapPoint">
+          <Property Name="Name" Type="String" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Harbour" BaseType="DbModel.Waypoint">
+          <Property Name="Description" Type="String" Nullable="false" />
+          <Property Name="Website" Type="String" Nullable="false" />
+          <Property Name="Phone" Type="String" Nullable="false" />
+          <Property Name="Frequency" Type="String" Nullable="false" />
+          <NavigationProperty Name="Ratings" Relationship="DbModel.HarbourRating" FromRole="Harbour" ToRole="Rating" />
+        </EntityType>
+        <EntityType Name="Ton" BaseType="DbModel.Waypoint">
+          <Property Name="Type" Type="String" Nullable="false" />
+        </EntityType>
+        <EnumType Name="TonType" />
+        <EntityType Name="Connection">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <NavigationProperty Name="Ratings" Relationship="DbModel.ConnectionRating" FromRole="Connection" ToRole="Rating" />
+        </EntityType>
+        <EntityType Name="MapPoint">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Latitude" Type="Decimal" Nullable="false" />
+          <Property Name="Longitide" Type="Decimal" Nullable="false" />
+          <NavigationProperty Name="Pictures" Relationship="DbModel.MapPointPicture" FromRole="MapPoint" ToRole="Picture" />
+          <NavigationProperty Name="Files" Relationship="DbModel.MapPointFile" FromRole="MapPoint" ToRole="File" />
+        </EntityType>
+        <EntityType Name="POI" BaseType="DbModel.MapPoint">
+          <Property Name="Name" Type="String" Nullable="false" />
+          <Property Name="Description" Type="String" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Picture">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <NavigationProperty Name="MapPoint" Relationship="DbModel.MapPointPicture" FromRole="Picture" ToRole="MapPoint" />
+          <Property Name="MapPointId" Type="Int32" Nullable="false" />
+          <Property Name="Date" Type="DateTime" Nullable="false" />
+          <Property Name="FileName" Type="String" Nullable="false" />
+          <Property Name="FileContent" Type="String" Nullable="false" />
+          <NavigationProperty Name="Ratings" Relationship="DbModel.PictureRating" FromRole="Picture" ToRole="Rating" />
+        </EntityType>
+        <Association Name="MapPointPicture">
+          <End Type="DbModel.MapPoint" Role="MapPoint" Multiplicity="1" />
+          <End Type="DbModel.Picture" Role="Picture" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MapPoint">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Picture">
+              <PropertyRef Name="MapPointId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="File">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <NavigationProperty Name="MapPoint" Relationship="DbModel.MapPointFile" FromRole="File" ToRole="MapPoint" />
+          <Property Name="MapPointId" Type="Int32" Nullable="false" />
+          <Property Name="FIleName" Type="String" Nullable="false" />
+          <Property Name="FileContent" Type="Binary" Nullable="false" />
+          <Property Name="Date" Type="DateTime" Nullable="false" />
+        </EntityType>
+        <Association Name="MapPointFile">
+          <End Type="DbModel.MapPoint" Role="MapPoint" Multiplicity="1" />
+          <End Type="DbModel.File" Role="File" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MapPoint">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="File">
+              <PropertyRef Name="MapPointId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Rating">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Description" Type="String" Nullable="false" />
+          <Property Name="StarCount" Type="Decimal" Nullable="false" />
+          <Property Name="ConnectionId" Type="Int32" Nullable="false" cg:GetterAccess="Private" cg:SetterAccess="Private" />
+          <Property Name="HarbourId" Type="Int32" Nullable="false" cg:GetterAccess="Private" cg:SetterAccess="Private" />
+        </EntityType>
+        <Association Name="ConnectionRating">
+          <End Type="DbModel.Connection" Role="Connection" Multiplicity="1" />
+          <End Type="DbModel.Rating" Role="Rating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Connection">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Rating">
+              <PropertyRef Name="ConnectionId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="HarbourRating">
+          <End Type="DbModel.Harbour" Role="Harbour" Multiplicity="1" />
+          <End Type="DbModel.Rating" Role="Rating" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Harbour">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Rating">
+              <PropertyRef Name="HarbourId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="PictureRating">
+          <End Type="DbModel.Picture" Role="Picture" Multiplicity="1" />
+          <End Type="DbModel.Rating" Role="Rating" Multiplicity="*" />
+        </Association>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs" Space="C-S">
+        <Alias Key="Model" Value="DbModel" />
+        <Alias Key="Target" Value="DbModel.Store" />
+        <EntityContainerMapping CdmEntityContainer="DbModelContainer" StorageEntityContainer="DbModelTargetContainer">
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <edmx:Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="False" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Kein" />
+      </DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

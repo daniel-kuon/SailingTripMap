@@ -1,0 +1,153 @@
+﻿<div id="map" style="height: 500px;"></div>
+<button class="btn btn-default" type="button" data-bind="click: addHarbour">Hafen hinzufügen</button>
+<div>
+
+    <table class="table table-hover table-striped">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th style="width: 150px">Länge</th>
+            <th style="width: 150px">Breite</th>
+            <th style="width: 300px"></th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: harbours">
+        <tr>
+            <td data-bind="text: name"></td>
+            <td data-bind="text: longitude"></td>
+            <td data-bind="text: latitude"></td>
+            <td>
+                <div class="btn-group-sm btn-group">
+                    <button class="btn btn-sm btn-danger" data-bind="click: $root.selectHarbour" data-toggle="modal" data-target="#modalRemoveHarbour" type="button">Löschen</button><button class="btn btn-sm btn-default" data-bind="click: $root.centerWaypoint" type="button">Zentrieren</button><button class="btn btn-sm btn-default" data-bind="click: $root.selectHarbour" data-toggle="modal" data-target="#modalEditHarbour" type="button">Bearbeiten</button>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div id="popups">
+<div class="modal fade" tabindex="-1" id="modalEditWaypoint">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Wegpunkt bearbeiten</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Soll der Wegpunkt <span data-bind="content: selectedWaypoint.number"></span> wirklich gelöscht werden?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" data-bind="click: removeWaypoint">Löschen</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" id="modalRemoveWaypoint">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Wegpunkt bearbeiten</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form" data-bind="with: editingWaypoint">
+                    <div class="from-group">
+                        <label for="txtEditWaypointNumber">Nummer</label>
+                        <input type="text" value="" data-bind="value: number" class="form-control" id="txtEditWaypointNumber" />
+                    </div>
+                    <div class="from-group">
+                        <label for="txtEditWaypointLatitude">Breitengrad</label>
+                        <input type="text" value="" class="form-control" data-bind="value:latitude" id="txtEditWaypointLatitude" />
+                    </div>
+                    <div class="from-group">
+                        <label for="txtEditWaypointLongitude">Längengrad</label>
+                        <input type="text" value="" class="form-control" data-bind="value: longitude" id="txtEditWaypointLongitude" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal" data-bind="click: saveWaypoint, enabled: isEditingWayPointValid">Speichern</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="modal fade" tabindex="-1" id="modalRemoveHarbour">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Hafen löschen</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Soll der Hafen <span data-bind="content: currentHarbour.name"></span> wirklich gelöscht werden?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" data-bind="click: removeHarbour">Löschen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" tabindex="-1" id="modalEditHarbour">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Hafen bearbeiten</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form" data-bind="with: editingHarbour">
+                        <div class="form-group">
+                            <label for="txtEditHarbourName">Name</label>
+                            <input required type="text" class="form-control" data-bind="value: name" id="txtEditHarbourName"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="txtEditHarbourLatitude">Breitengrad</label>
+                            <input required type="number" class="form-control" data-bind="value: latitude" step="any" id="txtEditHarbourLatitude"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="txtEditHarbourLongitude">Längengrad</label>
+                            <input required type="number" class="form-control" data-bind="value: longitude" step="any" id="txtEditHarbourLongitude" />
+                        </div>
+                        <div class="form-group">
+                            <label for="txtEditHarbourWaypoint">Wegpunktnummer</label>
+                            <input required type="number" class="form-control" data-bind="value: waypointNumber" id="txtEditHarbourWaypoint" />
+                        </div>
+                        <div class="form-group">
+                            <label for="txtEditHarbourDescription">Beschreibung</label>
+                            <textarea data-bind="value: description" class="form-control" id="txtEditHarbourDescription"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Schließen</button>
+                    <button type="button" class="btn btn-success" data-dismiss="modal" data-bind="click: saveHarbour, enabled: isEditingHarbourValid">Speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@Scripts.Render("~/bundles/knockout")
+@Scripts.Render("~/bundles/app")
+@section Scripts {
+    @*<script src="https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.js"></script>*@
+<script src="~/Scripts/mapbox.js"></script>
+    <script src="~/Scripts/Map.js"></script>
+}
+
+
+@section Head{
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.css"/>
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="629da876ad9d45be9c902e5b63cdcd57" Name="Diagram1" >
+        <EntityTypeShape EntityType="DbModel.Waypoint" Width="1.5" PointX="4.5" PointY="2.625" />
+        <EntityTypeShape EntityType="DbModel.Harbour" Width="1.5" PointX="7.375" PointY="0.75" />
+        <InheritanceConnector EntityType="DbModel.Harbour" />
+        <EntityTypeShape EntityType="DbModel.Ton" Width="1.5" PointX="7.625" PointY="4.375" />
+        <InheritanceConnector EntityType="DbModel.Ton" />
+        <EntityTypeShape EntityType="DbModel.Connection" Width="1.5" PointX="5.125" PointY="0.5" />
+        <EntityTypeShape EntityType="DbModel.MapPoint" Width="1.5" PointX="1.75" PointY="4.375" />
+        <EntityTypeShape EntityType="DbModel.POI" Width="1.5" PointX="5.125" PointY="4.625" />
+        <InheritanceConnector EntityType="DbModel.POI" />
+        <EntityTypeShape EntityType="DbModel.Picture" Width="1.5" PointX="5" PointY="6.5" />
+        <AssociationConnector Association="DbModel.MapPointPicture" />
+        <EntityTypeShape EntityType="DbModel.File" Width="1.5" PointX="0.5" PointY="6.75" />
+        <AssociationConnector Association="DbModel.MapPointFile" />
+        <EntityTypeShape EntityType="DbModel.Rating" Width="1.5" PointX="7.125" PointY="6.625" />
+        <AssociationConnector Association="DbModel.ConnectionRating" />
+        <AssociationConnector Association="DbModel.HarbourRating" />
+        <AssociationConnector Association="DbModel.PictureRating" />
+        <AssociationConnector Association="DbModel.ConnectionWaypoint" />
+        <EntityTypeShape EntityType="DbModel.Trip" Width="1.5" PointX="10.75" PointY="1.375" />
+        <EntityTypeShape EntityType="DbModel.TripLeg" Width="1.5" PointX="10.5" PointY="3.625" />
+        <AssociationConnector Association="DbModel.TripTripLeg" />
+        <AssociationConnector Association="DbModel.TripLegHarbour" />
+        <AssociationConnector Association="DbModel.TripLegWaypoint" />
+        </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>
