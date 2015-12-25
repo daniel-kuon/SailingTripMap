@@ -5,20 +5,20 @@
 }
 
 function distance(latLngStart: L.LatLng, latLngEnd: L.LatLng) {
-    var R = 6371000; // meter
-    var Phi1 = latLngStart.lat * (Math.PI / 180);
-    var Phi2 = latLngEnd.lat * (Math.PI / 180);
-    var DeltaPhi = (latLngEnd.lat - latLngStart.lat) * (Math.PI / 180);
-    var DeltaLambda = (latLngEnd.lng - latLngStart.lng) * (Math.PI / 180);
-
-    var a = Math.sin(DeltaPhi / 2) * Math.sin(DeltaPhi / 2)
+    const R = 6371000;
+    // meter
+    const Phi1 = latLngStart.lat * (Math.PI / 180);
+    const Phi2 = latLngEnd.lat * (Math.PI / 180);
+    const DeltaPhi = (latLngEnd.lat - latLngStart.lat) * (Math.PI / 180);
+    const DeltaLambda = (latLngEnd.lng - latLngStart.lng) * (Math.PI / 180);
+    const a = Math.sin(DeltaPhi / 2) * Math.sin(DeltaPhi / 2)
         + Math.cos(Phi1) * Math.cos(Phi2) * Math.sin(DeltaLambda / 2)
         * Math.sin(DeltaLambda / 2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c;
-
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c;
     return d;
 }
+
 
 enum MarkerType {
     Harbour,
@@ -100,6 +100,8 @@ abstract class MapPoint {
 class Waypoint extends MapPoint {
     constructor(latLng: L.LatLng, markerType: MarkerType) {
         super(latLng, markerType);
+        this.name = ko.observable<string>(name);
+        this.description = ko.observable<string>("");
         this.latLng.polylines = new Array();
         this.latLng.waypoint = this;
         this.waypointNumber = ko.observable<number>();
@@ -144,6 +146,21 @@ class Waypoint extends MapPoint {
             this.marker.addOneTimeEventListener("drag", (e: L.LeafletMouseEvent) => {
                 this.convertFromDummyHandle();
             });
+        else if (this.markerType === MarkerType.Waypoint) {
+            this.name(`Wegpunkt ${model.waypoints().length + 1}`);
+            model.waypoints.push(this);
+        }
+    }
+
+    show(highlight:boolean=false): void {
+        this.marker.setOpacity(this.marker.waypoint.isDummy() ? 0.5 : 1);
+        if (highlight)
+            $(this.marker._icon).addClass("hover");
+    }
+
+    hide(): void {
+        this.marker.setOpacity(0.1);
+            $(this.marker._icon).removeClass("hover");
     }
 
     redraw(): void {
@@ -156,6 +173,8 @@ class Waypoint extends MapPoint {
         this.marker.setOpacity(1);
         splitPolyline(this.polylines[0]);
         this.markerType = MarkerType.Waypoint;
+        if (this.name() == undefined)
+            this.name(`Wegpunkt ${model.waypoints().length + 1}`);
     }
 
     isInPolyline(polyline: L.Polyline): boolean {
@@ -170,6 +189,7 @@ class Waypoint extends MapPoint {
         if (this.markerType !== MarkerType.Dummy)
             for (let polyline of this.polylines)
                 removePolyline(polyline);
+        model.waypoints.remove(this);
         super.removeFromMap();
     }
 
@@ -205,6 +225,9 @@ class Waypoint extends MapPoint {
 
     waypointNumber: KnockoutObservable<number>;
     private polylines: L.Polyline[];
+
+    name: KnockoutObservable<string>;
+    description: KnockoutObservable<string>;
 }
 
 function splitPolyline(polyline: L.Polyline) {
@@ -274,16 +297,13 @@ function removeFromArray<T>(arr: T[], obj: T): boolean {
 }
 
 class Harbour extends Waypoint {
+
     constructor(name: string, latitude: number, longitude: number);
     constructor(name: string, latLng: L.LatLng);
-    constructor(name: string, arg2: number|L.LatLng, longitude?: number) {
-        super(arg2 instanceof L.LatLng ? <L.LatLng>arg2 : new L.LatLng(<number>arg2, longitude), MarkerType.Harbour);
-        this.name = ko.observable<string>(name);
-        this.description = ko.observable<string>("");
+    constructor(name: string, arg2: number | L.LatLng, longitude?: number) {
+        super(arg2 instanceof L.LatLng ? (arg2 as L.LatLng) : new L.LatLng(arg2 as number, longitude), MarkerType.Harbour);
+        this.name(name);
     }
-
-    name: KnockoutObservable<string>;
-    description: KnockoutObservable<string>;
 
     removeIfHasZeroOrOnePolylines(): boolean {
         return false;
@@ -310,6 +330,7 @@ declare namespace L {
     export interface Marker {
         waypoint: MapPoint;
         point: L.Point;
+        _icon;
     }
 
     export interface CircleMarker {
@@ -326,6 +347,7 @@ class SailingMapViewModel {
     map: L.Map;
     waypointMarkers: L.Marker[];
     harbours: KnockoutObservableArray<Harbour>;
+    waypoints: KnockoutObservableArray<Waypoint>;
     selectedHarbour: KnockoutObservable<Harbour>;
     selectedWaypoint: KnockoutObservable<Waypoint>;
     editingHarbour: KnockoutObservable<Harbour>;
@@ -387,6 +409,7 @@ class SailingMapViewModel {
             }
         });
         this.harbours = ko.observableArray<Harbour>();
+        this.waypoints = ko.observableArray<Waypoint>();
         this.selectedHarbour = ko.observable<Harbour>();
         this.selectedWaypoint = ko.observable<Waypoint>();
 
@@ -401,26 +424,39 @@ class SailingMapViewModel {
     }
 
     removeHarbour = () => {
+        this.selectedWaypoint().removeFromMap();
+    };
+    removeWaypoint = () => {
         this.selectedHarbour().removeFromMap();
         this.harbours.remove(this.selectedHarbour());
     };
     centerWaypoint = (harbour: Harbour) => {
         harbour.centerOnMap();
     };
+    selectWaypoint = (waypoint: Waypoint) => {
+        this.selectedWaypoint(waypoint);
+    };
     selectHarbour = (harbour: Harbour) => {
         this.selectedHarbour(harbour);
     };
 
+    saveHarbour = () => {
+        this.copyHarbour(this.editingHarbour(), this.selectedHarbour());
+    };
+    saveWaypoint = () => {
+        this.copyHarbour(this.editingWaypoint(), this.selectedWaypoint());
+    };
+
     copyHarbour(h1: Harbour, h2: Harbour): void {
         this.copyWaypoint(h1, h2);
-        h2.name(h1.name());
-        h2.description(h1.description());
     }
 
     copyWaypoint(w1: Waypoint, w2: Waypoint) {
         w2.waypointNumber(w1.waypointNumber());
         w2.latitude(w1.latitude());
         w2.longitude(w1.longitude());
+        w2.name(w1.name());
+        w2.description(w1.description());
     }
 
     addPolyline(waypoint?: Waypoint): L.Polyline;
@@ -431,9 +467,9 @@ class SailingMapViewModel {
         polyline.waypoints = new Array();
         if (arg !== undefined)
             if (arg instanceof Waypoint)
-            (<Waypoint>arg).addToPolyline(polyline);
+            (arg as Waypoint).addToPolyline(polyline);
             else
-                for (let waypoint of <Waypoint[]>arg) {
+                for (let waypoint of arg as Waypoint[]) {
                     waypoint.addToPolyline(polyline);
                 }
         return polyline;
@@ -457,3 +493,10 @@ class SailingMapViewModel {
 
 var model = new SailingMapViewModel();
 ko.applyBindings(model);
+
+$("#navPoints").on("mouseenter", "tr", function () {
+    ko.contextFor(this).$data.show(true);
+});
+$("#navPoints").on("mouseleave", "tr", function() {
+    ko.contextFor(this).$data.hide();
+});

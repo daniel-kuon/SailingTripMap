@@ -9,7 +9,8 @@ function getMiddle(pol) {
     return new L.LatLng(start.lat + ((end.lat - start.lat) / 2), start.lng + ((end.lng - start.lng) / 2));
 }
 function distance(latLngStart, latLngEnd) {
-    var R = 6371000; // meter
+    var R = 6371000;
+    // meter
     var Phi1 = latLngStart.lat * (Math.PI / 180);
     var Phi2 = latLngEnd.lat * (Math.PI / 180);
     var DeltaPhi = (latLngEnd.lat - latLngStart.lat) * (Math.PI / 180);
@@ -92,6 +93,8 @@ var Waypoint = (function (_super) {
     function Waypoint(latLng, markerType) {
         var _this = this;
         _super.call(this, latLng, markerType);
+        this.name = ko.observable(name);
+        this.description = ko.observable("");
         this.latLng.polylines = new Array();
         this.latLng.waypoint = this;
         this.waypointNumber = ko.observable();
@@ -137,7 +140,21 @@ var Waypoint = (function (_super) {
             this.marker.addOneTimeEventListener("drag", function (e) {
                 _this.convertFromDummyHandle();
             });
+        else if (this.markerType === MarkerType.Waypoint) {
+            this.name("Wegpunkt " + (model.waypoints().length + 1));
+            model.waypoints.push(this);
+        }
     }
+    Waypoint.prototype.show = function (highlight) {
+        if (highlight === void 0) { highlight = false; }
+        this.marker.setOpacity(this.marker.waypoint.isDummy() ? 0.5 : 1);
+        if (highlight)
+            $(this.marker._icon).addClass("hover");
+    };
+    Waypoint.prototype.hide = function () {
+        this.marker.setOpacity(0.1);
+        $(this.marker._icon).removeClass("hover");
+    };
     Waypoint.prototype.redraw = function () {
         _super.prototype.redraw.call(this);
         for (var i = 0; i < this.polylines.length; i++)
@@ -147,6 +164,8 @@ var Waypoint = (function (_super) {
         this.marker.setOpacity(1);
         splitPolyline(this.polylines[0]);
         this.markerType = MarkerType.Waypoint;
+        if (this.name() == undefined)
+            this.name("Wegpunkt " + (model.waypoints().length + 1));
     };
     Waypoint.prototype.isInPolyline = function (polyline) {
         for (var _i = 0, _a = this.polylines; _i < _a.length; _i++) {
@@ -162,6 +181,7 @@ var Waypoint = (function (_super) {
                 var polyline = _a[_i];
                 removePolyline(polyline);
             }
+        model.waypoints.remove(this);
         _super.prototype.removeFromMap.call(this);
     };
     Waypoint.prototype.addToPolyline = function (polyline) {
@@ -258,8 +278,7 @@ var Harbour = (function (_super) {
     __extends(Harbour, _super);
     function Harbour(name, arg2, longitude) {
         _super.call(this, arg2 instanceof L.LatLng ? arg2 : new L.LatLng(arg2, longitude), MarkerType.Harbour);
-        this.name = ko.observable(name);
-        this.description = ko.observable("");
+        this.name(name);
     }
     Harbour.prototype.removeIfHasZeroOrOnePolylines = function () {
         return false;
@@ -275,14 +294,26 @@ var SailingMapViewModel = (function () {
     function SailingMapViewModel() {
         var _this = this;
         this.removeHarbour = function () {
+            _this.selectedWaypoint().removeFromMap();
+        };
+        this.removeWaypoint = function () {
             _this.selectedHarbour().removeFromMap();
             _this.harbours.remove(_this.selectedHarbour());
         };
         this.centerWaypoint = function (harbour) {
             harbour.centerOnMap();
         };
+        this.selectWaypoint = function (waypoint) {
+            _this.selectedWaypoint(waypoint);
+        };
         this.selectHarbour = function (harbour) {
             _this.selectedHarbour(harbour);
+        };
+        this.saveHarbour = function () {
+            _this.copyHarbour(_this.editingHarbour(), _this.selectedHarbour());
+        };
+        this.saveWaypoint = function () {
+            _this.copyHarbour(_this.editingWaypoint(), _this.selectedWaypoint());
         };
         this.removePolyline = function (polyline) {
             _this.map.removeLayer(polyline);
@@ -345,6 +376,7 @@ var SailingMapViewModel = (function () {
             }
         });
         this.harbours = ko.observableArray();
+        this.waypoints = ko.observableArray();
         this.selectedHarbour = ko.observable();
         this.selectedWaypoint = ko.observable();
         this.editingHarbour = ko.observable();
@@ -357,13 +389,13 @@ var SailingMapViewModel = (function () {
     };
     SailingMapViewModel.prototype.copyHarbour = function (h1, h2) {
         this.copyWaypoint(h1, h2);
-        h2.name(h1.name());
-        h2.description(h1.description());
     };
     SailingMapViewModel.prototype.copyWaypoint = function (w1, w2) {
         w2.waypointNumber(w1.waypointNumber());
         w2.latitude(w1.latitude());
         w2.longitude(w1.longitude());
+        w2.name(w1.name());
+        w2.description(w1.description());
     };
     SailingMapViewModel.prototype.addPolyline = function (arg) {
         var polyline = new L.Polyline([]);
@@ -388,4 +420,10 @@ var SailingMapViewModel = (function () {
 })();
 var model = new SailingMapViewModel();
 ko.applyBindings(model);
+$("#navPoints").on("mouseenter", "tr", function () {
+    ko.contextFor(this).$data.show(true);
+});
+$("#navPoints").on("mouseleave", "tr", function () {
+    ko.contextFor(this).$data.hide();
+});
 //# sourceMappingURL=Map.js.map
